@@ -51,6 +51,7 @@ module.exports = function(app, passport) {
 		res.render('profile.ejs', {
 			user : req.user // get the user out of session and pass to template
 		});
+		console.log('in PROFILE SECTION. just rendered profile.ejs');
 	});
 
 
@@ -71,11 +72,13 @@ module.exports = function(app, passport) {
     app.get('/auth/google', passport.authenticate('google', { scope : ['profile', 'email'] }));
 
     // the callback after google has authenticated the user
+    console.log('after authentication');
     app.get('/auth/google/callback',
             passport.authenticate('google', {
                     successRedirect : '/profile',
                     failureRedirect : '/'
             }));
+    console.log('finished google callback');
 
 };
 
@@ -83,8 +86,10 @@ module.exports = function(app, passport) {
 function isLoggedIn(req, res, next) {
 
 	// if user is authenticated in the session, carry on
-	if (req.isAuthenticated())
+	if (req.isAuthenticated()) {
+	        console.log('checking that user is authenticated still');
 		return next();
+	}
 
 	// if they aren't redirect them to the home page
 	res.redirect('/');

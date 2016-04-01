@@ -2,7 +2,7 @@
 
 var DB = require('./db').DB;
 
-var User = DB.model.extend({
+var User = DB.Model.extend({
   tableName: 'users',
   idAttribute: 'email'
 });
