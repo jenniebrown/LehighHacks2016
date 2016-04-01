@@ -26,8 +26,8 @@ module.exports = function(passport) {
 
     // used to deserialize the user
     passport.deserializeUser(function(email, done) {
-        new Model.User({ email: email }).fetch().then(function(err, user) {
-            done(err, user);
+        new Model.User({ email: email }).fetch().then(function(user) {
+            done(null, user);
         });
     });
 
@@ -49,19 +49,23 @@ module.exports = function(passport) {
 
             // try to find the user based on their google id
             
-	    new Model.User({ 'googleid' : profile.id }).fetch().then(function(err, user) {
-            
-	        if (err)
-                    return done(err);
-
+	    new Model.User({ 'googleid' : profile.id }).fetch().then(function(user) {
+                console.log(JSON.stringify(token));
+		console.log(JSON.stringify(user)); 
+		console.log(JSON.stringify(profile));
+//	        if (err)
+//		    console.log('error: couldn\'t complete query');
+//                    return done(err);
+//
                 if (user) {
 
                     // if a user is found, log them in
-                    return done(null, user);
+                    console.log('found user. logging in');
+		    return done(null, user);
                 } else {
-                    // if the user isnt in our database, create a new user
+                    console.log('making new user');
+		    // if the user isnt in our database, create a new user
                     //var newUser          = new Model.User({ email : profile.emails[0].value });
-		    console.log(JSON.stringify(profile));
                     // set all of the relevant information
                     //newUser.googleid    = profile.id;
                     //newUser.googletoken = profile.token;
@@ -72,11 +76,13 @@ module.exports = function(passport) {
                     var newUser = new Model.User({ email : profile.emails[0].value });
 		    newUser.save({ 
 		     		   googleid : profile.id,
-		    		   token : profile.token,
+		    		   token : token,
 				   username : profile.displayName,
 				   firstname : profile.name.givenName,
 				   lastname : profile.name.familyName },
-				   { method: 'insert'}).then(function(model) { return done(null, model); } );
+				   { method: 'insert'}).then(function(model) { 
+				       console.log('saving new user');
+				       return done(null, model); } );
 		    //new Model.User({ 'googleid' : profile.id }).fetch().then(function(err, user) {
 		    //    if (err)
 		    //        return done(err);
