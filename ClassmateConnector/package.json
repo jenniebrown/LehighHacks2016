@@ -11,6 +11,7 @@
     "cfenv": "1.0.x",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.1",
+    "document": "^0.4.7",
     "ejs": "^2.4.1",
     "express": "4.13.x",
     "express-session": "^1.13.0",

@@ -1,6 +1,8 @@
 // config/passport.js
 
 // load all the things we need
+var mysql = require('mysql');
+var document = require('document');
 var LocalStrategy   = require('passport-local').Strategy;
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 // load up the user model
@@ -11,7 +13,7 @@ var Model = require('../models/user.js');
 var configAuth = require('./auth');
 
 // expose this function to our app using module.exports
-module.exports = function(passport) {
+module.exports = function(passport,con) {
 
     // =========================================================================
     // passport session setup ==================================================
@@ -26,9 +28,9 @@ module.exports = function(passport) {
 
     // used to deserialize the user
     passport.deserializeUser(function(email, done) {
-        new Model.User({ email: email }).fetch().then(function(user) {
-            done(null, user);
-        });
+        con.query('SELECT * FROM users WHERE email = ?', [email], function(error, result, fields) {
+		done(null, result);
+	})
     });
 
     // =========================================================================
@@ -49,14 +51,14 @@ module.exports = function(passport) {
 
             // try to find the user based on their google id
             
-	    new Model.User({ 'googleid' : profile.id }).fetch().then(function(user) {
-                console.log(JSON.stringify(token));
+                con.query('SELECT * FROM users WHERE googleid = ?', [profile.id], function(err, result, fields) {
+		console.log(JSON.stringify(token));
 		console.log(JSON.stringify(user)); 
 		console.log(JSON.stringify(profile));
-//	        if (err)
-//		    console.log('error: couldn\'t complete query');
-//                    return done(err);
-//
+	        if (err)
+		    console.log('error: couldn\'t complete query');
+                    return done(err);
+
                 if (user) {
 
                     // if a user is found, log them in
@@ -71,27 +73,37 @@ module.exports = function(passport) {
                     //newUser.googletoken = profile.token;
                     //newUser.googlename  = profile.displayName;
                     //newUser.googleemail = profile.emails[0].value; // pull the first email
-
+		    var newUser = { googleid : profile.id,
+		                    token : token,
+		                    username : profile.displayName,
+		                    firstName : profile.name.givenName,
+		                    lastName : profile.name.familyName };
+		    
+		    con.query('INSERT INTO users SET ?', newUser, function(err, result) {
+			return done(null, newUser);
+		    })
                     // save the user
-                    var newUser = new Model.User({ email : profile.emails[0].value });
-		    newUser.save({ 
-		     		   googleid : profile.id,
-		    		   token : token,
-				   username : profile.displayName,
-				   firstname : profile.name.givenName,
-				   lastname : profile.name.familyName },
-				   { method: 'insert'}).then(function(model) { 
-				       console.log('saving new user');
-				       return done(null, model); } );
+                //    var newUser = new Model.User({ email : profile.emails[0].value });
+		//    newUser.save({ 
+		//     		   googleid : profile.id,
+		//    		   token : token,
+		//		   username : profile.displayName,
+		//		   firstname : profile.name.givenName,
+		//		   lastname : profile.name.familyName },
+		//		   { method: 'insert'}).then(function(model) { 
+		//		       document.cookie = "email="+profile.emails[0].value;
+		//		       console.log(document.cookie);
+		//		       return done(null, model); } );
 		    //new Model.User({ 'googleid' : profile.id }).fetch().then(function(err, user) {
 		    //    if (err)
 		    //        return done(err);
 		    //    return done(null, user);
 		    //});
             }
+	    })
         });
 
-    });
+    }));
 
-}))
-};
+}
+

@@ -1,11 +1,13 @@
 // app/routes.js
-module.exports = function(app, passport) {
+var document = require('document');
+var mysql = require('mysql');
+module.exports = function(app, passport, con) {
 
 	// =====================================
 	// HOME PAGE (with login links) ========
 	// =====================================
 	app.get('/', function(req, res) {
-		res.render('landingpage.ejs', {"classes":["CSE241","CSE271","CSE261"]}); //index.ejs'); // load the index.ejs file
+		res.render('index.ejs'); // load the index.ejs file
 	});
 
 	// =====================================
@@ -48,10 +50,33 @@ module.exports = function(app, passport) {
 	// we will want this protected so you have to be logged in to visit
 	// we will use route middleware to verify this (the isLoggedIn function)
 	app.get('/profile', isLoggedIn, function(req, res) {
-		res.render('profile.ejs', {
-			user : req.user // get the user out of session and pass to template
+		con.connect(function(err) {
+			if (err) {
+				console.log('Error connecting to database routes.js');
+				return;
+			} else {
+				console.log('Connected to ClearDB');
+			}
 		});
+		var columns = ['classID', 'sectionID'];
+		var email = document.cookie;
+		console.log(email);
+		var courses = con.query('SELECT ?? FROM ?? WHERE email = ?', [columns, 'takes', email], function(err, rows, fields){
+				if (err) {
+				    console.log(err);
+				    return;
+				} else {
+				    console.log(rows);
+				}
+			});
+		res.render('landingpage.ejs', {"classes":["CSE241","CSE271","CSE261"]}); 
 		console.log('in PROFILE SECTION. just rendered profile.ejs');
+		con.end(function(err) {
+			if (err) {
+				console.log('Error disconnecting from DB');
+				return;
+			}
+		});
 	});
 
 
